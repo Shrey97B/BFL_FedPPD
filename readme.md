@@ -2,7 +2,7 @@
 
 This repository provides code for FedPPD. 
 
-FedPPD is a Bayesian federated learning algorithm in which every client learns predictive posterior distribution over its private dataset and share it with the server where they can be aggregated in multiple  ways.
+FedPPD is a Bayesian federated learning algorithm in which every client learns predictive posterior distribution over its private dataset and share it with the server which aggregates them in varied  ways.
 
 
 
@@ -61,9 +61,13 @@ FedPPD is a Bayesian federated learning algorithm in which every client learns p
     python3 train_cifar_mnist.py --dataset cifar100 --rounds 200 --local_ep 10 --teach_lr 0.055 --teach_sch_gamma 0.85 --teach_sch_step 3 --stud_lr 0.02 --distill --server_ep 20 --teacher_type SWAG --use_client --use_SWA --teach_server_lr 0.0015 --stud_server_lr 0.0025 --swag_stepsize 0.00001 --model resnet --log_dir log_fedppd_distill_cifar100 --img_use_frac 0.5 --num_data 40000 --num_threads 5
     ```
 
-    
 
 
+- #### References
 
+  This repository contains some code modules from:
 
+  - [apd_public](https://github.com/wangkua1/apd_public)
+  - [Bayesian-Neural-Networks](https://github.com/JavierAntoran/Bayesian-Neural-Networks)
+  - [FedBE](https://github.com/hongyouc/FedBE)
 
