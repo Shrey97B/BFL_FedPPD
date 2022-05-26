@@ -33,7 +33,7 @@ FedPPD is a Bayesian federated learning algorithm in which every client learns p
 
     ```./preprocess.sh -s iid --iu 0.003 --sf 0.3 -t sample```
 
-    For FedPPD with distillation based aggregation at server, manually split the files in train directory into two disjoint directories: **train ** and **server_data** in the for performing distillation at server in *FedPPD+Distill*. *train* directory should have number of files equal to number of total clients. *server_data* should store very few (~3) files as unlabeled data on the server.
+    For FedPPD with distillation based aggregation at server, manually split the files in train directory into two disjoint directories: **train** and **server_data** in the for performing distillation at server in *FedPPD+Distill*. *train* directory should have number of files equal to number of total clients. *server_data* should store very few (~3) files as unlabeled data on the server.
 
 - #### Commands
 
