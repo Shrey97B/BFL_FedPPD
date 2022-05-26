@@ -64,7 +64,7 @@ if __name__ == '__main__':
     users, groups, train_data, test_data = read_data(train_data_dir, test_data_dir)
     su, sg, server_data = read_dir(server_dir)
 
-    print(users)
+    # print(users)
     args.num_users = len(users)
 
     with open(os.path.join(args.log_dir, "args.txt"), "w") as f:
@@ -131,7 +131,7 @@ if __name__ == '__main__':
     server_y = server_y.type(torch.LongTensor)
     server_dataset = TensorDataset(server_x,server_y)
     
-    print(test_dataset)
+    # print(test_dataset)
 
     teacher_model = CNN_FEMNIST()
     student_model = CNN_FEMNIST_Stud()

@@ -45,6 +45,9 @@ FedPPD is a Bayesian federated learning algorithm in which every client learns p
     python3 train_cifar_mnist.py --dataset cifar10 --rounds 200 --local_ep 10 --teach_lr 0.055 --teach_sch_gamma 0.85 --teach_sch_step 3 --stud_lr 0.02 --model cnn --log_dir log_fedppd_cifar10 --img_use_frac 0.5 --num_data 40000 --num_threads 5
     
     python3 train_cifar_mnist.py --dataset cifar100 --rounds 200 --local_ep 10 --teach_lr 0.055 --teach_sch_gamma 0.85 --teach_sch_step 3 --stud_lr 0.02 --model resnet --log_dir log_fedppd_cifar100 --img_use_frac 0.5 --num_data 40000 --num_threads 5
+
+    python3 train_femnist.py --dataset femnist --rounds 200 --local_ep 10 --teach_lr 0.05 --teach_sch_gamma 0.8 --teach_sch_step 3 --stud_lr 0.085 --model cnn --log_dir log_fedppd_femnist --num_threads 5 --femnist_data_dir <path/to/femnist/data> --subsample 2000
+
     ```
 
     
@@ -59,6 +62,9 @@ FedPPD is a Bayesian federated learning algorithm in which every client learns p
     python3 train_cifar_mnist.py --dataset cifar10 --rounds 200 --local_ep 10 --teach_lr 0.055 --teach_sch_gamma 0.85 --teach_sch_step 3 --stud_lr 0.02 --distill --server_ep 20 --teacher_type SWAG --use_client --use_SWA --teach_server_lr 0.0015 --stud_server_lr 0.0025 --model cnn --log_dir log_fedppd_distill_cifar10 --img_use_frac 0.5 --num_data 40000 --num_threads 5
     
     python3 train_cifar_mnist.py --dataset cifar100 --rounds 200 --local_ep 10 --teach_lr 0.055 --teach_sch_gamma 0.85 --teach_sch_step 3 --stud_lr 0.02 --distill --server_ep 20 --teacher_type SWAG --use_client --use_SWA --teach_server_lr 0.0015 --stud_server_lr 0.0025 --swag_stepsize 0.00001 --model resnet --log_dir log_fedppd_distill_cifar100 --img_use_frac 0.5 --num_data 40000 --num_threads 5
+
+    python3 train_femnist.py --dataset femnist --rounds 200 --local_ep 10 --teach_lr 0.06 --teach_sch_gamma 0.85 --teach_sch_step 3 --stud_lr 0.085 --distill --server_ep 50 --teacher_type SWAG --use_client --use_SWA --num_sample_teacher 120 --teach_server_lr 0.001 --stud_server_lr 0.001 --model cnn --log_dir log_fedppd_distill_femnist --num_threads 5 --femnist_data_dir <path/to/femnist/data> --subsample 2000
+
     ```
 
 
