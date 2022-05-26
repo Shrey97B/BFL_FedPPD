@@ -59,7 +59,7 @@ class LocalTSUpdate(object):
           self.N_train = len(dataset)
         else:
           self.N_train = len(idxs)
-        print('Training client with ', self.N_train, ' amount of data')
+        # print('Training client with ', self.N_train, ' amount of data')
         
         #WARNING: drop last batch to avoid issue with BN training in networks with BN layers
         if args.model=='resnet':
@@ -106,7 +106,7 @@ class LocalTSUpdate(object):
             teach_optim.step()
             pred = out.data.max(dim=1, keepdim=False)[1]  # get the index of the max log-probability
             err = pred.ne(labels.data).sum()
-            err = err/len(images)
+            err = (err+0.0)/len(images)
             if self.args.verbose and batch_idx % 10 == 0:
                 print('Update Epoch: {} [{}/{} ({:.0f}%)]\t Teacher Loss: {:.6f} Error: {:.6f}'.format(iter, batch_idx * len(images), 
                 len(self.ldr_train.dataset),
@@ -135,7 +135,7 @@ class LocalTSUpdate(object):
             stud_optim.step()
             pred = out1.data.max(dim=1, keepdim=False)[1]  # get the index of the max log-probability
             err = pred.ne(labels.data).sum()
-            err = err/len(images)
+            err = (err+0.0)/len(images)
             if self.args.verbose and batch_idx % 10 == 0:
                 print('Update Epoch: {} [{}/{} ({:.0f}%)]\t Student Loss: {:.6f} Error: {:.6f}'.format(iter, batch_idx * len(images), 
                 len(self.ldr_train.dataset),

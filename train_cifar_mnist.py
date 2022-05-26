@@ -59,83 +59,43 @@ if __name__ == '__main__':
                                                 transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))])
 
     # load dataset and split it among clients
-    if args.config_file is None:
-        if args.dataset == 'mnist':
-            args.num_classes = 10
-            dataset_train    = datasets.MNIST('../../Config_Gen/data/mnist/', train=True, download=True, transform=transform_mnist)
-            dataset_test     = datasets.MNIST('../../Config_Gen/data/mnist/', train=False, download=True, transform=transform_mnist)
-            dataset_eval     = datasets.MNIST('../../Config_Gen/data/mnist/', train=True, download=True, transform=transform_mnist)        
-            
-            # sample users
-            if args.iid:
-                dict_users, server_id, cnts_dict = mnist_iid(dataset_train, args.num_users)
-            else:
-                dict_users, server_id, cnts_dict  = mnist_noniid(dataset_train, args.num_users, method=args.split_method, img_use_frac=args.img_use_frac)
+    if args.dataset == 'mnist':
+        args.num_classes = 10
+        dataset_train    = datasets.MNIST('data/mnist/', train=True, download=True, transform=transform_mnist)
+        dataset_test     = datasets.MNIST('data/mnist/', train=False, download=True, transform=transform_mnist)
+        dataset_eval     = datasets.MNIST('data/mnist/', train=True, download=True, transform=transform_mnist)        
         
-        elif args.dataset == 'cifar10':
-            args.num_classes = 10
-            dataset_train    = datasets.CIFAR10('../../Config_Gen/data/cifar10', train=True, download=True, transform=transform_cifar_train)
-            dataset_test     = datasets.CIFAR10('../../Config_Gen/data/cifar10', train=False, download=True, transform=transform_cifar_val)
-            dataset_eval     = datasets.CIFAR10('../../Config_Gen/data/cifar10', train=True, transform=transform_cifar_val, target_transform=None, download=True)
-            
-            if args.iid:
-                dict_users, server_id, cnts_dict = cifar_iid(dataset_train, args.num_users, num_data=args.num_data)
-            else:
-                dict_users, server_id, cnts_dict = cifar_noniid(dataset_train, args.num_users, num_data=args.num_data, img_use_frac=args.img_use_frac,method=args.split_method)
-        
-        elif args.dataset == 'cifar100':
-            args.num_classes = 100
-            dataset_train    = datasets.CIFAR100('../../Config_Gen/data/cifar100', train=True, download=True, transform=transform_cifar_train)
-            dataset_test     = datasets.CIFAR100('../../Config_Gen/data/cifar100', train=False, download=True, transform=transform_cifar_val)
-            dataset_eval     = datasets.CIFAR100('../../Config_Gen/data/cifar100', train=True, transform=transform_cifar_val, target_transform=None, download=True)
-            
-            if args.iid:
-                dict_users, server_id = cifar100_iid(dataset_train, args.num_users, num_data=args.num_data)
-            else:
-                dict_users, server_id, cnts_dict = cifar100_noniid(dataset_train, args.num_users, num_data=args.num_data, img_use_frac=args.img_use_frac, n_class=100, n_class_per_user=20, lst_sample=2)
-        
+        # sample users
+        if args.iid:
+            dict_users, server_id, cnts_dict = mnist_iid(dataset_train, args.num_users)
         else:
-            exit('Error: unsupported dataset')
+            dict_users, server_id, cnts_dict  = mnist_noniid(dataset_train, args.num_users, method=args.split_method, img_use_frac=args.img_use_frac)
+    
+    elif args.dataset == 'cifar10':
+        args.num_classes = 10
+        dataset_train    = datasets.CIFAR10('data/cifar10', train=True, download=True, transform=transform_cifar_train)
+        dataset_test     = datasets.CIFAR10('data/cifar10', train=False, download=True, transform=transform_cifar_val)
+        dataset_eval     = datasets.CIFAR10('data/cifar10', train=True, transform=transform_cifar_val, target_transform=None, download=True)
+        
+        if args.iid:
+            dict_users, server_id, cnts_dict = cifar_iid(dataset_train, args.num_users, num_data=args.num_data)
+        else:
+            dict_users, server_id, cnts_dict = cifar_noniid(dataset_train, args.num_users, num_data=args.num_data, img_use_frac=args.img_use_frac,method=args.split_method)
+    
+    elif args.dataset == 'cifar100':
+        args.num_classes = 100
+        dataset_train    = datasets.CIFAR100('data/cifar100', train=True, download=True, transform=transform_cifar_train)
+        dataset_test     = datasets.CIFAR100('data/cifar100', train=False, download=True, transform=transform_cifar_val)
+        dataset_eval     = datasets.CIFAR100('data/cifar100', train=True, transform=transform_cifar_val, target_transform=None, download=True)
+        
+        if args.iid:
+            dict_users, server_id = cifar100_iid(dataset_train, args.num_users, num_data=args.num_data)
+        else:
+            dict_users, server_id, cnts_dict = cifar100_noniid(dataset_train, args.num_users, num_data=args.num_data, img_use_frac=args.img_use_frac, n_class=100, n_class_per_user=20, lst_sample=2)
+    
     else:
-        with open(args.config_file, "r") as f:
-            js_dict = json.load(f)
-            args.dataset = js_dict['EXP_DATASET']
-            args.num_users = js_dict['NUM_CLIENTS']
-            dict_users = js_dict['DATA_DISTRIBUTION']
-            round_clients = js_dict['ROUND_CLIENT_PARTICIPATION']
-            args.rounds = js_dict['NUM_ROUNDS']
-            clients_per_round = js_dict['CLIENT_PER_ROUNDS']
-            server_id = js_dict['SER_DATA']
-            cnts_dict = js_dict['CNT_LAB']
-            dict_users = {int(k):v for k,v in dict_users.items()}
-            cnts_dict = {int(k):v for k,v in cnts_dict.items()}
-            for i in range(args.num_users):
-                dict_users[i] = np.array(dict_users[i])
-                cnts_dict[i] = np.array(cnts_dict[i])
-            server_id = np.array(server_id)
+        exit('Error: unsupported dataset')
         
-        if args.dataset=='mnist':
-            #task = create_mnist_task() #Yet to create
-            args.num_classes = 10
-            trans_mnist = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-            dataset_train = datasets.MNIST('../../Config_Gen/data/mnist/', train=True, download=True, transform=transform_mnist)
-            dataset_test = datasets.MNIST('../../Config_Gen/data/mnist/', train=False, download=True, transform=transform_mnist)
-            dataset_eval = datasets.MNIST('../../Config_Gen/data/mnist/', train=True, download=True, transform=transform_mnist) 
-        
-        elif args.dataset=='cifar10':
-            args.num_classes = 10
-            dataset_train = datasets.CIFAR10('../../Config_Gen/data/cifar10', train=True, download=True, transform=transform_cifar_train)
-            dataset_test = datasets.CIFAR10('../../Config_Gen/data/cifar10', train=False, download=True, transform=transform_cifar_val)
-            dataset_eval = datasets.CIFAR10('../../Config_Gen/data/cifar10', train=True, transform=transform_cifar_val, target_transform=None, download=True)
-        
-        elif args.dataset == 'cifar100':
-            args.num_classes = 100
-            dataset_train = datasets.CIFAR100('../../Config_Gen/data/cifar100', train=True, download=True, transform=transform_cifar_train)
-            dataset_test  = datasets.CIFAR100('../../Config_Gen/data/cifar100', train=False, download=True, transform=transform_cifar_val)
-            dataset_eval  = datasets.CIFAR100('../../Config_Gen/data/cifar100', train=True, transform=transform_cifar_val, target_transform=None, download=True)
-        
-        else:
-            exit('Invalid Dataset Name')
 
     with open(os.path.join(args.log_dir, "args.txt"), "w") as f:
         for arg in vars(args):
@@ -154,28 +114,23 @@ if __name__ == '__main__':
 
     elif args.model=='cnn' and args.dataset=='cifar10':
         tmodel_class = CNN_Cifar
-        if args.diff_stud_model == 1:
-            smodel_class = CNN_Cifar_Stud
-        else:
-            smodel_class = CNN_Cifar
-
+        smodel_class = CNN_Cifar_Stud
+        
         teacher_model = tmodel_class()
         student_model = smodel_class()
     
     elif args.model=='cnn' and args.dataset=='mnist':
         tmodel_class = CNN_Mnist
-        if args.diff_stud_model == 1:
-            smodel_class = CNN_Mnist_Stud
-        else:
-            smodel_class = CNN_Mnist
+        smodel_class = CNN_Mnist_Stud
+        
         teacher_model = tmodel_class()
         student_model = smodel_class()
     
     else:
         exit('Error: unrecognized model')      
         
-    print('Global Teacher Model', teacher_model)
-    print('Global Student Model', student_model)
+    print('\nGlobal Teacher Model', teacher_model)
+    print('\nGlobal Student Model', student_model)
 
     # copy weights
     teacher_wt = teacher_model.state_dict()
@@ -191,8 +146,8 @@ if __name__ == '__main__':
         student_model.apply(weights_init)   
 
 
-    def client_ts_train_func(q, device_id, tnet, snet, t_lr, s_lr, t_wd, s_wd, t_gamma, t_ss, iters, idx, generator=None):
-        device=torch.device('cuda:{}'.format(device_id) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
+    def client_ts_train_func(q, tnet, snet, t_lr, s_lr, t_wd, s_wd, t_gamma, t_ss, iters, idx, generator=None):
+        device=torch.device('cuda' if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
         local_eps = args.local_ep
 
         local = LocalTSUpdate(args=args, device=device, dataset=dataset_train, idxs=dict_users[idx], 
@@ -207,6 +162,7 @@ if __name__ == '__main__':
         else:
             tm = tmodel_class()
             sm = smodel_class()
+            
         tm.load_state_dict(teach_model.state_dict())
         sm.load_state_dict(stud_model.state_dict())
         teach_ep_loss_copy = teach_epoch_loss.copy()
@@ -215,8 +171,8 @@ if __name__ == '__main__':
         q.put(arr_pass)
         return  
 
-    def server_train_func(q, device_id, net_glob, teachers, global_ep, w_org=None, base_teachers=None, server_lr=1e-3):
-        device=torch.device('cuda:{}'.format(device_id) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
+    def server_train_func(q, net_glob, teachers, global_ep, w_org=None, base_teachers=None, server_lr=1e-3):
+        device=torch.device('cuda' if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
         student = ServerUpdate(args=args, device=device, dataset=dataset_eval, server_dataset=dataset_eval, server_idxs=server_id,  
                             test=(dataset_test, range(len(dataset_test))), w_org=w_org, base_teachers=base_teachers, server_lr=server_lr)
       
@@ -229,21 +185,16 @@ if __name__ == '__main__':
     all_size_arr = [np.sum(cnts_dict[i]) for i in range(args.num_users)]    
 
     generator = None
-    dev_id=args.device_id
     num_threads = args.num_threads
     tb_writer = SummaryWriter(log_dir=args.log_dir + '/')
 
     for iters in range(args.rounds):
 
-        print('Global Training Round: ', str(iters))
-        if args.config_file is None:
-            m = max(int(args.frac * args.num_users), 1)
-            idxs_users = np.random.choice(range(args.num_users), m, replace=False)
-        else:
-            m = clients_per_round
-            idxs_users = round_clients[iters]
-
-        #v3 Training
+        print('\nGlobal Training Round: {}'.format(iters))
+        m = max(int(args.frac * args.num_users), 1)
+        idxs_users = np.random.choice(range(args.num_users), m, replace=False)
+        
+        # Training
         teacher_wt = copy.deepcopy(teacher_model.state_dict())
         student_wt = copy.deepcopy(student_model.state_dict())
 
@@ -251,7 +202,7 @@ if __name__ == '__main__':
         client_teachers = [[] for i in range(args.num_users)]
         client_students = [[] for i in range(args.num_users)]
 
-        #v3 Training        
+        # Training        
         for i in range(0, m, num_threads):
             processes = []
             torch.cuda.empty_cache()
@@ -260,7 +211,7 @@ if __name__ == '__main__':
             num_out=0
 
             for idx in idxs_users[i:min(m,i+num_threads)]:
-                p = mp.Process(target=client_ts_train_func, args=(q, dev_id, copy.deepcopy(teacher_model), copy.deepcopy(student_model), args.teach_lr, args.stud_lr, args.teach_wd, args.stud_wd, args.teach_sch_gamma, args.teach_sch_step, iters, idx, generator))
+                p = mp.Process(target=client_ts_train_func, args=(q, copy.deepcopy(teacher_model), copy.deepcopy(student_model), args.teach_lr, args.stud_lr, args.teach_wd, args.stud_wd, args.teach_sch_gamma, args.teach_sch_step, iters, idx, generator))
                 num_in+=1
                 p.start()
                 processes.append(p)
@@ -302,18 +253,18 @@ if __name__ == '__main__':
         teacher_model.load_state_dict(teacher_wt_avg) 
 
         if args.stud_ent_avg:
-            print('Entropy-weighted aggregation of student models')
+            print('Entropy-weighted aggregation of student models at server done!')
             student_wt_avg = FedEntropyAvg(copy.deepcopy(student_model), client_student_wts, server_data=dataset_eval ,server_id=server_id, size_arr=size_arr)    
 
         else:
-            print('Datasize-weighted aggregation of student models')
+            print('Datasize-weighted aggregation of student models at server done!')
             student_wt_avg = FedAvg(client_student_wts, size_arr=size_arr)
 
         student_model.load_state_dict(student_wt_avg)
         
         if iters%args.log_ep== 0:
-            log_test_net(fedavg_logger, args.acc_dir, teacher_model, tag='teacher_server', iters=iters, dataset_train=dataset_eval, dataset_test=dataset_test, train_ids=train_ids, server_id=server_id)
-            log_test_net(fedavg_logger, args.acc_dir, student_model, tag='student_server', iters=iters, dataset_train=dataset_eval, dataset_test=dataset_test, train_ids=train_ids, server_id=server_id)
+            # log_test_net(fedavg_logger, args.acc_dir, teacher_model, tag='teacher_server', iters=iters, dataset_train=dataset_eval, dataset_test=dataset_test, train_ids=train_ids)
+            log_test_net(fedavg_logger, args.acc_dir, student_model, tag='student_server', iters=iters, dataset_train=dataset_eval, dataset_test=dataset_test, train_ids=train_ids)
         
         # Generate Teachers
         if args.distill:
@@ -344,7 +295,7 @@ if __name__ == '__main__':
             print("Server training...")
 
             q = mp.Manager().Queue()
-            p = mp.Process(target=server_train_func, args=(q,dev_id,teacher_model,distill_tlist,iters,None, None, args.teach_server_lr))
+            p = mp.Process(target=server_train_func, args=(q, teacher_model,distill_tlist,iters,None, None, args.teach_server_lr))
             p.start()
 
             count_over=0
@@ -368,7 +319,7 @@ if __name__ == '__main__':
             
             if iters%args.log_ep== 0:
                 teacher_model.load_state_dict(w_glob_mean)
-                log_test_net(dist_logger, args.acc_dir, teacher_model, tag='Teach_DIST-SWA', iters=iters, dataset_train=dataset_eval, dataset_test=dataset_test, train_ids=train_ids, server_id=server_id)        
+                # log_test_net(dist_logger, args.acc_dir, teacher_model, tag='Teach_DIST-SWA', iters=iters, dataset_train=dataset_eval, dataset_test=dataset_test, train_ids=train_ids)        
 
             teacher_model.load_state_dict(w_glob_mean)
             print("Sending back teacher w/ SWA!")
@@ -401,7 +352,7 @@ if __name__ == '__main__':
             print("Server training...")
 
             q = mp.Manager().Queue()
-            p = mp.Process(target=server_train_func, args=(q,dev_id,student_model,distill_slist,iters,None, None, args.stud_server_lr))
+            p = mp.Process(target=server_train_func, args=(q,student_model,distill_slist,iters,None, None, args.stud_server_lr))
             p.start()
 
             count_over=0
@@ -425,7 +376,7 @@ if __name__ == '__main__':
             
             if iters%args.log_ep== 0:
                 student_model.load_state_dict(w_glob_mean)
-                log_test_net(dist_logger, args.acc_dir, student_model, tag='Stud_DIST-SWA', iters=iters , dataset_train=dataset_eval, dataset_test=dataset_test, train_ids=train_ids, server_id=server_id)        
+                log_test_net(dist_logger, args.acc_dir, student_model, tag='Stud_DIST-SWA', iters=iters , dataset_train=dataset_eval, dataset_test=dataset_test, train_ids=train_ids)        
 
             student_model.load_state_dict(w_glob_mean)
             print("Sending back student w/ SWA!")

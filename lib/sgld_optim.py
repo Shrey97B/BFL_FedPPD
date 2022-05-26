@@ -17,7 +17,7 @@ class SGLD(Optimizer):
 
     def __init__(self, params, lr=required, weight_decay=0.001, datasize=1, addnoise=True):
         
-        print('SGLD optimizer Initialized')
+        # print('SGLD optimizer Initialized')
         self.correction = datasize/2
         if weight_decay < 0.0:
             raise ValueError("Invalid weight_decay value: {}".format(weight_decay))

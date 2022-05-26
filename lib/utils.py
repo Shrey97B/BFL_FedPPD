@@ -21,7 +21,7 @@ import torch.nn.functional as F
 import json
 from collections import defaultdict
 
-def test_img(net_g, datatest, idxs, reweight=None):
+def test_img(net_g, datatest, idxs, reweight=None, dataset_type=None):
     net_g.eval()
     test_loss = 0
     correct = 0
@@ -44,33 +44,26 @@ def test_img(net_g, datatest, idxs, reweight=None):
 
     test_loss /= cnt
     accuracy = 100.00 * correct / cnt
-    print('\nTest set: Average loss: {:.4f} \nAccuracy: {}/{} ({:.2f}%)\n'.format(test_loss, correct, len(data_loader.dataset), accuracy))
+    print('{:5s}: loss = {:5.4f}  |  Accuracy = {}/{} ({:4.2f}%)'.format(dataset_type, test_loss, correct, len(data_loader.dataset), accuracy))
     return accuracy.numpy(), test_loss
 
-def test_data(net_glob, dataset, ids):
-    acc, loss = test_img(net_glob, dataset, ids)
+def test_data(net_glob, dataset, ids, dataset_type=None):
+    acc, loss = test_img(net_glob, dataset, ids, dataset_type=dataset_type)
     #q.put([acc, loss])
     return [acc, loss]
 
-def test_net_util(net_glob, tag, dataset_train, dataset_test, train_ids, server_id=None):
+def test_net_util(net_glob, tag, dataset_train, dataset_test, train_ids):
 
-    [acc_train, loss_train] = test_data(net_glob, dataset_train, train_ids)
-    [acc_test, loss_test] = test_data(net_glob, dataset_test, range(len(dataset_test)))
-    if server_id is None:
-      acc_val=0.0
-      loss_val=0.0
-    else:
-      [acc_val, loss_val] = test_data(net_glob, dataset_train, server_id)
+    [acc_train, loss_train] = test_data(net_glob, dataset_train, train_ids, dataset_type='Train')
+    [acc_test, loss_test] = test_data(net_glob, dataset_test, range(len(dataset_test)), dataset_type='Test')
 
-    return [acc_train, loss_train], [acc_test,  loss_test], [acc_val,  loss_val]
+    return [acc_train, loss_train], [acc_test,  loss_test]
 
-def log_test_net(logger, acc_dir, net_glob, tag, iters, dataset_train, dataset_test, train_ids, server_id):
-    [acc_train, loss_train], [acc_test,  loss_test], [acc_val,  loss_val] = test_net_util(net_glob, tag=tag, dataset_train=dataset_train, dataset_test=dataset_test, train_ids = train_ids,server_id=server_id)
+def log_test_net(logger, acc_dir, net_glob, tag, iters, dataset_train, dataset_test, train_ids):
+    [acc_train, loss_train], [acc_test,  loss_test] = test_net_util(net_glob, tag=tag, dataset_train=dataset_train, dataset_test=dataset_test, train_ids = train_ids)
 
     if iters==0:
         open(os.path.join(acc_dir, tag+"_train_acc.txt"), "w")
-        if server_id is not None:
-          open(os.path.join(acc_dir, tag+"_val_acc.txt"), "w")
         open(os.path.join(acc_dir, tag+"_test_acc.txt"), "w")
         open(os.path.join(acc_dir, tag+"_test_loss.txt"), "w")
 
@@ -78,9 +71,6 @@ def log_test_net(logger, acc_dir, net_glob, tag, iters, dataset_train, dataset_t
         f.write("%d %f\n"%(iters, acc_train))
     with open(os.path.join(acc_dir, tag+"_test_acc.txt"), "a") as f:
         f.write("%d %f\n"%(iters, acc_test))
-    if server_id is not None:
-      with open(os.path.join(acc_dir, tag+"_val_acc.txt"), "a") as f:
-          f.write("%d %f\n"%(iters, acc_val))          
     with open(os.path.join(acc_dir, tag+"_test_loss.txt"), "a") as f:
         f.write("%d %f\n"%(iters, loss_test))
       
@@ -91,19 +81,12 @@ def log_test_net(logger, acc_dir, net_glob, tag, iters, dataset_train, dataset_t
         logger.loss_test_list.append(loss_test)
         logger.test_acc_list.append(acc_test)
 
-        if server_id is not None:
-          logger.loss_val_list.append(loss_val)
-          logger.val_acc_list.append(acc_val)
     else:
         if tag =="SWAG":
             logger.swag_train_acc_list.append(acc_train)
-            if server_id is not None:
-              logger.swag_val_acc_list.append(acc_val) 
             logger.swag_test_acc_list.append(acc_test)            
         else:
             logger.swa_train_acc_list.append(acc_train)
-            if server_id is not None:
-              logger.swa_val_acc_list.append(acc_val) 
             logger.swa_test_acc_list.append(acc_test)     
 
 def calculate_avg_entropy(net, client_w, server_dataset_image):

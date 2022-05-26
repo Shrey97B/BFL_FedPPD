@@ -136,8 +136,8 @@ if __name__ == '__main__':
     teacher_model = CNN_FEMNIST()
     student_model = CNN_FEMNIST_Stud()
 
-    print('Global Teacher Model', teacher_model)
-    print('Global Student Model', student_model)
+    print('\nGlobal Teacher Model', teacher_model)
+    print('\nGlobal Student Model', student_model)
 
     teacher_wt = teacher_model.state_dict()
     student_wt = student_model.state_dict()
@@ -145,8 +145,8 @@ if __name__ == '__main__':
     teacher_model.apply(weights_init) 
     student_model.apply(weights_init)
 
-    def client_ts_train_func(q, device_id, tnet, snet, t_lr, s_lr, t_wd, s_wd, t_gamma, t_ss, iters, idx, user_seq_idx, generator=None):
-        device=torch.device('cuda:{}'.format(device_id) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
+    def client_ts_train_func(q, tnet, snet, t_lr, s_lr, t_wd, s_wd, t_gamma, t_ss, iters, idx, user_seq_idx, generator=None):
+        device=torch.device('cuda' if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
         local_eps = args.local_ep
 
         local = LocalTSUpdate(args=args, device=device, dataset=train_dataset[idx], idxs=None, test=(test_dataset, range(len(test_dataset))), num_per_cls=None)
@@ -165,8 +165,8 @@ if __name__ == '__main__':
         q.put(arr_pass)
         return
 
-    def server_train_func(q, device_id, net_glob, teachers, global_ep, w_org=None, base_teachers=None, server_lr=1e-3):
-        device=torch.device('cuda:{}'.format(device_id) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
+    def server_train_func(q, net_glob, teachers, global_ep, w_org=None, base_teachers=None, server_lr=1e-3):
+        device=torch.device('cuda' if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
         student = ServerUpdate(args=args, device=device, dataset=server_dataset, server_dataset=server_dataset, server_idxs=range(len(server_dataset)), test=(test_dataset, range(len(test_dataset))), w_org=w_org, base_teachers=base_teachers, server_lr=server_lr)
       
         w_swa, w_glob, train_acc, val_acc, test_acc, loss, entropy = student.train(net_glob, teachers, args.log_dir, global_ep)
@@ -184,7 +184,6 @@ if __name__ == '__main__':
         all_size_arr[i] = train_dataset[users[i]].__len__()  
 
     generator = None
-    dev_id=args.device_id
     num_threads = args.num_threads
     tb_writer = SummaryWriter(log_dir=args.log_dir + '/')  
     local_t_lr = args.teach_lr
@@ -201,7 +200,7 @@ if __name__ == '__main__':
 
     for iters in range(args.rounds):
 
-        print('Global Training Round: ', str(iters))
+        print('\nGlobal Training Round: ', str(iters))
         m = max(int(args.frac * num_users), 1)
         idxs_users = np.random.choice(users, m, replace=False)
         selected_seq = [user_seq[ind] for ind in idxs_users]
@@ -223,7 +222,7 @@ if __name__ == '__main__':
             num_out=0
 
             for idx in idxs_users[i:min(m,i+num_threads)]:
-                p = mp.Process(target=client_ts_train_func, args=(q, dev_id, copy.deepcopy(teacher_model), copy.deepcopy(student_model), local_t_lr, local_s_lr, args.teach_wd, args.stud_wd, args.teach_sch_gamma, args.teach_sch_step, iters, idx, user_seq[idx], generator))
+                p = mp.Process(target=client_ts_train_func, args=(q, copy.deepcopy(teacher_model), copy.deepcopy(student_model), local_t_lr, local_s_lr, args.teach_wd, args.stud_wd, args.teach_sch_gamma, args.teach_sch_step, iters, idx, user_seq[idx], generator))
                 num_in+=1
                 p.start()
                 processes.append(p)
@@ -279,8 +278,8 @@ if __name__ == '__main__':
         local_s_lr *= s_gamma
         
         if iters%args.log_ep== 0:
-            log_test_net(fedavg_logger, args.acc_dir, teacher_model, tag='teacher_server', iters=iters, dataset_train=train_dataset_all, dataset_test=test_dataset, train_ids=range(len(train_dataset_all)), server_id=None)
-            log_test_net(fedavg_logger, args.acc_dir, student_model, tag='student_server', iters=iters, dataset_train=train_dataset_all, dataset_test=test_dataset, train_ids=range(len(train_dataset_all)), server_id=None)
+            # log_test_net(fedavg_logger, args.acc_dir, teacher_model, tag='teacher_server', iters=iters, dataset_train=train_dataset_all, dataset_test=test_dataset, train_ids=range(len(train_dataset_all)))
+            log_test_net(fedavg_logger, args.acc_dir, student_model, tag='student_server', iters=iters, dataset_train=train_dataset_all, dataset_test=test_dataset, train_ids=range(len(train_dataset_all)))
 
         # Generate Teachers
         if args.distill:
@@ -308,7 +307,7 @@ if __name__ == '__main__':
             print("Server training...")
 
             q = mp.Manager().Queue()
-            p = mp.Process(target=server_train_func, args=(q,dev_id,teacher_model,distill_tlist,iters,None, None, server_t_lr))
+            p = mp.Process(target=server_train_func, args=(q, teacher_model,distill_tlist,iters,None, None, server_t_lr))
             p.start()
 
             count_over=0
@@ -330,7 +329,7 @@ if __name__ == '__main__':
             teacher_model.eval()
             if iters%args.log_ep== 0:
                 teacher_model.load_state_dict(w_glob_mean)
-                log_test_net(dist_logger, args.acc_dir, teacher_model, tag='Teach_DIST-SWA', iters=iters, dataset_train=train_dataset_all, dataset_test=test_dataset, train_ids=range(len(train_dataset_all)), server_id=None)
+                # log_test_net(dist_logger, args.acc_dir, teacher_model, tag='Teach_DIST-SWA', iters=iters, dataset_train=train_dataset_all, dataset_test=test_dataset, train_ids=range(len(train_dataset_all)), server_id=None)
             teacher_model.load_state_dict(w_glob_mean)
             print("Sending back teacher w/ SWA!")
 
@@ -361,7 +360,7 @@ if __name__ == '__main__':
             # update global weights
             print("Server training...")
             q = mp.Manager().Queue()
-            p = mp.Process(target=server_train_func, args=(q,dev_id,student_model,distill_slist,iters,None, None, server_s_lr))
+            p = mp.Process(target=server_train_func, args=(q, student_model,distill_slist,iters,None, None, server_s_lr))
             p.start()
 
             count_over=0
@@ -386,7 +385,7 @@ if __name__ == '__main__':
                 student_model.load_state_dict(w_glob_mean)
             if iters%args.log_ep== 0:
                 student_model.load_state_dict(w_glob_mean)
-                log_test_net(dist_logger, args.acc_dir, student_model, tag='Stud_DIST-SWA', iters=iters, dataset_train=train_dataset_all, dataset_test=test_dataset, train_ids=range(len(train_dataset_all)), server_id=None)
+                log_test_net(dist_logger, args.acc_dir, student_model, tag='Stud_DIST-SWA', iters=iters, dataset_train=train_dataset_all, dataset_test=test_dataset, train_ids=range(len(train_dataset_all)))
 
             student_model.load_state_dict(w_glob_mean)
             print("Sending back student w/ SWA!")
