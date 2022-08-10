@@ -84,16 +84,17 @@ def mnist_noniid(dataset, num_users, num_data=60000, method='step', img_use_frac
       f.write("Server Labels: %s sum: %d\n"%(" ".join([str(c) for c in count_serv]), sum(count_serv) ))  
     return dict_users, server_idx, cnts_dict
 
-def cifar_iid(dataset, num_users, num_data=40000):
+def cifar_iid(dataset, num_users, num_data=40000, method='random'):
     
+    labels = np.array(dataset.targets)
     dict_users, all_idxs = {}, [i for i in range(len(dataset))]
     server_idx = np.random.choice(all_idxs, 50000-num_data, replace=False)
     all_idxs = list(set(all_idxs) - set(server_idx))
     num_items = int(len(all_idxs)/num_users)
     
     for i in range(num_users):
-        dict_users[i] = set(np.random.choice(all_idxs, num_items, replace=False))
-        all_idxs = list(set(all_idxs) - dict_users[i])
+        dict_users[i] = np.random.choice(all_idxs, num_items, replace=False)
+        all_idxs = list(set(all_idxs) - set(dict_users[i]))
 
     cnts_dict = {}
     with open("cifar10_data_%d_u%d_%s.txt"%(num_data, num_users, method), 'w') as f:
@@ -195,24 +196,32 @@ def cifar_noniid(dataset, num_users, num_data=40000, img_use_frac=1.0, method="s
    
     return dict_users, server_idx, cnts_dict
 
-def cifar100_iid(dataset, num_users, num_data=50000):
+def cifar100_iid(dataset, num_users, num_data=50000, method='random'):
     """
     Sample I.I.D. client data from CIFAR10 dataset
     :param dataset:
     :param num_users:
     :return: dict of image index
     """
-    
+    labels = np.array(dataset.targets)
     dict_users, all_idxs = {}, [i for i in range(len(dataset))]
-    if num_data < 50000:
-      server_idx = np.random.choice(all_idxs, 50000-num_data, replace=False)
-      all_idxs = list(set(all_idxs) - set(server_idx))
+    server_idx = np.random.choice(all_idxs, 50000-num_data, replace=False)
+    all_idxs = list(set(all_idxs) - set(server_idx))
     num_items = int(len(all_idxs)/num_users)
     
     for i in range(num_users):
-        dict_users[i] = set(np.random.choice(all_idxs, num_items, replace=False))
-        all_idxs = list(set(all_idxs) - dict_users[i])
-    return dict_users, server_idx
+        dict_users[i] = np.random.choice(all_idxs, num_items, replace=False)
+        all_idxs = list(set(all_idxs) - set(dict_users[i]))
+
+    cnts_dict = {}
+    with open("cifar100_data_%d_u%d_%s.txt"%(num_data, num_users, method), 'w') as f:
+      for i in range(num_users):
+        labels_i = labels[dict_users[i]]
+        cnts = np.array([np.count_nonzero(labels_i == j ) for j in range(10)] )
+        cnts_dict[i] = cnts
+        f.write("User %s: %s sum: %d\n"%(i, " ".join([str(cnt) for cnt in cnts]), sum(cnts) ))
+
+    return dict_users, server_idx, cnts_dict
     
 def cifar100_noniid(dataset, num_users, num_data=50000, img_use_frac=1.0, method="step", n_class=100, n_class_per_user=20, lst_sample=2):
     """

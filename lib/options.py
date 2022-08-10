@@ -12,8 +12,11 @@ def args_parser():
 	parser.add_argument('--num_users'   , type=int  , default=10    , help="number of total clients")
 	parser.add_argument('--frac'        , type=float, default=1.0   , help="fraction of clients participating in every round")
 
+	# config file
+	parser.add_argument('--config_file', type=str, default=None)
+
 	# multiprocessing
-	parser.add_argument('--num_threads', type=int, default=1, help="number of maximum threads that can be spawned")
+	parser.add_argument('--num_threads', type=int, default=2, help="number of maximum threads that can be spawned")
 	
 	#Configuration arguments
 	parser.add_argument('--femnist_data_dir', type=str, default='.', help='Location of data file for train and test directory')

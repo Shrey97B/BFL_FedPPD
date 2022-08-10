@@ -1,6 +1,6 @@
 # =============================
 # 
-# main file to run below methods on datasets cifar10, cifar100, mnist:
+# Main file to run below methods on datasets cifar10, cifar100, mnist:
 # * FedPPD
 # * FedPPD+Entropy
 # * FedPPD+Distill
@@ -73,14 +73,22 @@ if __name__ == '__main__':
     
     elif args.dataset == 'cifar10':
         args.num_classes = 10
-        dataset_train    = datasets.CIFAR10('data/cifar10', train=True, download=True, transform=transform_cifar_train)
+        dataset_train    = datasets.CIFAR10('data/cifar10', train=True , download=True, transform=transform_cifar_train)
         dataset_test     = datasets.CIFAR10('data/cifar10', train=False, download=True, transform=transform_cifar_val)
-        dataset_eval     = datasets.CIFAR10('data/cifar10', train=True, transform=transform_cifar_val, target_transform=None, download=True)
+        dataset_eval     = datasets.CIFAR10('data/cifar10', train=True , transform=transform_cifar_val, target_transform=None, download=True)
         
-        if args.iid:
-            dict_users, server_id, cnts_dict = cifar_iid(dataset_train, args.num_users, num_data=args.num_data)
+        if args.config_file is not None:
+            config_dict = json.load(args.config_file)
+
+            dict_users = config_dict["DATA_DISTRIBUTION"]
+            server_id  = config_dict["SER_DATA"]
+            cnts_dict  = config_dict["CNT_LAB"]
+    
         else:
-            dict_users, server_id, cnts_dict = cifar_noniid(dataset_train, args.num_users, num_data=args.num_data, img_use_frac=args.img_use_frac,method=args.split_method)
+            if args.iid:
+                dict_users, server_id, cnts_dict = cifar_iid(dataset_train, args.num_users, num_data=args.num_data)
+            else:
+                dict_users, server_id, cnts_dict = cifar_noniid(dataset_train, args.num_users, num_data=args.num_data, img_use_frac=args.img_use_frac,method=args.split_method)
     
     elif args.dataset == 'cifar100':
         args.num_classes = 100
@@ -89,7 +97,7 @@ if __name__ == '__main__':
         dataset_eval     = datasets.CIFAR100('data/cifar100', train=True, transform=transform_cifar_val, target_transform=None, download=True)
         
         if args.iid:
-            dict_users, server_id = cifar100_iid(dataset_train, args.num_users, num_data=args.num_data)
+            dict_users, server_id, cnts_dict = cifar100_iid(dataset_train, args.num_users, num_data=args.num_data)
         else:
             dict_users, server_id, cnts_dict = cifar100_noniid(dataset_train, args.num_users, num_data=args.num_data, img_use_frac=args.img_use_frac, n_class=100, n_class_per_user=20, lst_sample=2)
     
