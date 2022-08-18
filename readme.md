@@ -52,8 +52,6 @@ FedPPD is a Bayesian federated learning algorithm in which every client learns p
 
     
 
-  - To run FedPPD with entropy-weighted aggregation at server, add the argument *--stud_ent_avg* to above commands
-
   - To run FedPPD with distillation at server, execute following commands as per the dataset:
 
     ```
@@ -67,7 +65,7 @@ FedPPD is a Bayesian federated learning algorithm in which every client learns p
 
     ```
 
-
+  - To run the experiments in iid setting (currently supported over CIFAR-10 and CIFAR-100 datasets), add the flag `--iid` in the command.
 
 - #### References
 
